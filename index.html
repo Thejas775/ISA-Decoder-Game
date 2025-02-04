@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISA Decoder Challenge</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
         
@@ -361,14 +362,6 @@
             "web development"
         ];
 
-        const CIPHER_DICT = {};
-        for (let i = 0; i < 26; i++) {
-            const currentChar = String.fromCharCode(97 + i);
-            const thirdChar = String.fromCharCode(97 + ((i + 3) % 26));
-            CIPHER_DICT[currentChar] = thirdChar;
-        }
-        CIPHER_DICT[' '] = ' ';
-
         let gameState = {
             currentSentence: '',
             encodedSentence: '',
@@ -378,13 +371,20 @@
             timerId: null
         };
 
-        function encodeSentence(sentence) {
-            return sentence.toLowerCase().split('').map(char => CIPHER_DICT[char] || char).join('');
+        function encryptAES(text, passphrase) {
+            return CryptoJS.AES.encrypt(text, passphrase).toString();
         }
+        
+        function decryptAES(ciphertext, passphrase) {
+            let bytes = CryptoJS.AES.decrypt(ciphertext, passphrase);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        }
+        
+        const PASSPHRASE = "YourSecretPassphrase123!";
 
         function initializeGame() {
             gameState.currentSentence = SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
-            gameState.encodedSentence = encodeSentence(gameState.currentSentence);
+            gameState.encodedSentence = encryptAES(gameState.currentSentence, PASSPHRASE);
             gameState.timeLeft = 120;
             gameState.attempts = 0;
             gameState.solved = false;
@@ -418,10 +418,11 @@
             if (gameState.solved || gameState.timeLeft <= 0) return;
 
             const userAnswer = document.getElementById('answer-input').value.trim().toLowerCase();
+            const decryptedText = decryptAES(gameState.encodedSentence, PASSPHRASE);
             gameState.attempts++;
             document.getElementById('attempts').innerHTML = `<i class="fas fa-check-circle"></i> Number of tries: ${gameState.attempts}`;
 
-            if (userAnswer === gameState.currentSentence) {
+            if (userAnswer === decryptedText) {
                 gameState.solved = true;
                 clearInterval(gameState.timerId);
                 showSuccess();
