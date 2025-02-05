@@ -371,20 +371,21 @@
             timerId: null
         };
 
-        function encryptAES(text, passphrase) {
-            return CryptoJS.AES.encrypt(text, passphrase).toString();
+        function encode64(text, passphrase) {
+            return btoa(text).replace(/=+$/, '');
         }
         
-        function decryptAES(ciphertext, passphrase) {
-            let bytes = CryptoJS.AES.decrypt(ciphertext, passphrase);
-            return bytes.toString(CryptoJS.enc.Utf8);
+        function decode64(ciphertext) {
+            let paddingNeeded = 4 - (ciphertext.length % 4);
+            if (paddingNeeded !== 4) {
+                ciphertext += '='.repeat(paddingNeeded)
+            }
+            return atob(ciphertext);
         }
-        
-        const PASSPHRASE = "YourSecretPassphrase123!";
 
         function initializeGame() {
             gameState.currentSentence = SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
-            gameState.encodedSentence = encryptAES(gameState.currentSentence, PASSPHRASE);
+            gameState.encodedSentence = encode64(gameState.currentSentence);
             gameState.timeLeft = 120;
             gameState.attempts = 0;
             gameState.solved = false;
@@ -418,7 +419,7 @@
             if (gameState.solved || gameState.timeLeft <= 0) return;
 
             const userAnswer = document.getElementById('answer-input').value.trim().toLowerCase();
-            const decryptedText = decryptAES(gameState.encodedSentence, PASSPHRASE);
+            const decryptedText = decode64(gameState.encodedSentence);
             gameState.attempts++;
             document.getElementById('attempts').innerHTML = `<i class="fas fa-check-circle"></i> Number of tries: ${gameState.attempts}`;
 
