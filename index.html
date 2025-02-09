@@ -311,6 +311,23 @@
                 padding: 15px;
             }
         }
+        .emergency-hint {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: none;
+            animation: fadeInHint 0.5s ease-out;
+        }
+
+        @keyframes fadeInHint {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
     </style>
 </head>
 <body>
@@ -332,6 +349,12 @@
             <button onclick="checkAnswer()">
                 <i class="fas fa-paper-plane"></i> Submit Answer
             </button>
+        </div>
+        <div class="hint">
+            <i class="fas fa-lightbulb"></i> Hint: Each letter follows a unique pattern!
+        </div>
+        <div id="emergency-hint" class="emergency-hint">
+            <i class="fas fa-exclamation-circle"></i> Extra Hint: Each letter is shifted 3 positions forward in the alphabet!
         </div>
     </div>
 
@@ -401,9 +424,17 @@
                 clearInterval(gameState.timerId);
             }
 
+            const emergencyHint = document.getElementById('emergency-hint');
+            emergencyHint.style.display = 'none';
+
             gameState.timerId = setInterval(() => {
                 gameState.timeLeft--;
                 document.getElementById('timer').innerHTML = `<i class="fas fa-hourglass-half"></i> Time Left: ${gameState.timeLeft} seconds`;
+
+                // Show emergency hint at 15 seconds
+                if (gameState.timeLeft === 15) {
+                    emergencyHint.style.display = 'block';
+                }
 
                 if (gameState.timeLeft <= 0 || gameState.solved) {
                     clearInterval(gameState.timerId);
